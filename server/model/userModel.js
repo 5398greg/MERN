@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema({
   //     },
   //     select: false,
   //   },
+  isVerified: { type: Boolean, default: false },
+  verifyOtp: { type: String, default: "" },
+  verifyOtpExpiresAt: { type: Number, default: 0 },
 });
 
 const User = mongoose.model("user", userSchema);

@@ -1,6 +1,7 @@
 import User from "../model/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import transporter from "../config/emailNodemailer.js";
 
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -75,6 +76,40 @@ export const logout = async (req, res) => {
     });
 
     res.json({ success: true, message: "Logged Out" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const sendVerifyOtp = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+
+    if (user.isVerified) {
+      return res.json({
+        status: false,
+        message: "Account is already Verified!",
+      });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+    user.verifyOtp = otp;
+    user.verifyOtpExpiresAt = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    const mailOptions = {
+      from: "gregkymgreg@gmail.com",
+      to: user.email,
+      subject: "Account verification Otp",
+      text: `Your OTP is ${otp}. This Otp will expire in the next 10 minutes`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: "Verification OTP sent on Email" });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
